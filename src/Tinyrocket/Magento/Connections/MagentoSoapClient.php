@@ -78,8 +78,7 @@ class MagentoSoapClient extends \SoapClient {
 				$this->wsdl = $this->getConstructedUrl();
 
 				parent::__construct($this->wsdl, $options);
-
-				$this->session = $this->login($this->connection['user'], $this->connection['key']);			
+				$this->session = $this->login($this->connection['user'], $this->connection['key']);				
 			} catch (Exception $e) {
 				throw new MagentoSoapClientException($e->getMessage());
 			}
@@ -98,14 +97,39 @@ class MagentoSoapClient extends \SoapClient {
 	 		$args = current($args);
 	 	}
 
+        $fix_methods = [
+            'catalogInventoryStockItemUpdate',
+            'catalogProductInfo',
+            'catalogProductListOfAdditionalAttributes',
+            'catalogProductLinkList',
+
+            'customerCustomerUpdate',
+            'customerAddressCreate',
+            'customerAddressUpdate',
+
+            'shoppingCartCustomerSet',
+            'shoppingCartCustomerAddresses',
+            'shoppingCartProductAdd',
+            'shoppingCartProductRemove',
+            'shoppingCartProductUpdate',
+            'shoppingCartShippingMethod',
+            'shoppingCartPaymentMethod',
+            'shoppingCartOrder',
+            'shoppingCartCouponAdd',
+        ];
+
 	 	try {
-	 		if ( $method == 'login' ) {
-			    $this->results = $this->__soapCall($method, $args);
-			} elseif ($method == 'call') {
-				$this->results = $this->__soapCall($method, $args);
-			} else {
-				$this->results = $this->__soapCall($method, array($this->session, $args));
-			}
+            if ( $method == 'login' ) {
+                $this->results = $this->__soapCall($method, $args);
+            } elseif ($method == 'call') {
+                $this->results = $this->__soapCall($method, $args);
+            //} elseif (count($args) != count($args, COUNT_RECURSIVE)) {
+            } elseif (in_array($method, $fix_methods)) {
+                array_unshift($args, $this->session);
+                $this->results = $this->__soapCall($method, $args);
+            } else {
+                $this->results = $this->__soapCall($method, array($this->session, $args));
+            }
 
 			return $this->getResultsCollections();
 		} catch ( \Exception $e) {
@@ -237,6 +261,7 @@ class MagentoSoapClient extends \SoapClient {
 	public function testConnection($connection, $showHeaders)
 	{
 		$testUrl = $this->getConstructedUrl($connection);
+
 		try {
 			file_get_contents($testUrl);
 			if ( $showHeaders === true ) {

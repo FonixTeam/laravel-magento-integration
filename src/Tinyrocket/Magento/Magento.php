@@ -66,7 +66,7 @@ class Magento {
 	 */
 	public function __construct(Repository $config)
 	{
-		$this->connections = $config->get('magento::connections');
+		$this->connections = config('magento.connections');	
 		if ( is_array($this->connections) ) {
 			$this->batchRegister($this->connections);
 		}
@@ -96,7 +96,7 @@ class Magento {
 	public function call($connection = null)
 	{
 		if ( !is_array($connection) or is_null($connection) ) {
-			$connection = !is_null($connection) ? $this->getConnection($connection) : $this->getPrimaryConnection();			
+			$connection = !is_null($connection) ? $this->getConnection($connection) : $this->getPrimaryConnection();
 		}
 		return new MagentoSoapClient($connection);
 	}
